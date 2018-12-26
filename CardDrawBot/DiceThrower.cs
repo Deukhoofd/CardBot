@@ -61,8 +61,8 @@ namespace CardDrawBot
                     return new DiceResult()
                     {
                         Results = arr,
-                        MaxValue = diceNum,
-                        NumberOfDice = max + 1
+                        MaxValue = max,
+                        NumberOfDice = diceNum
                     };
                 }
                 default:
