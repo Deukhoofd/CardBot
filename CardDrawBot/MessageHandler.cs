@@ -8,7 +8,6 @@ namespace CardDrawBot
 {
     public static class MessageHandler
     {
-        private static readonly CardDeck Deck = new CardDeck();
         private const char ControlCharacter = '!';
 
         public static async Task Handle(SocketMessage socketMessage)
@@ -18,16 +17,18 @@ namespace CardDrawBot
             // Grab the first word of the line.
             var command = splitString[0];
             // If the command word does not start with the control character, return.
-            if (command[0] != ControlCharacter)
+            if (command.Length == 0 || command[0] != ControlCharacter)
                 return;
             // Grab the command without the control character.
             command = command.Substring(1, command.Length - 1);
+
+            var deck = ChannelDecks.GetDeck(socketMessage.Channel.Id);
 
             // If the command is shuffle, regardless of case or computer culture.
             if (string.Equals(command, "shuffle", StringComparison.InvariantCultureIgnoreCase))
             {
                 // shuffle the deck.
-                Deck.Shuffle();
+                deck.Shuffle();
                 // And show a simple notification message back. This is async, so will fire and forget.
                 socketMessage.Channel.SendEmbed("Card Handler", "Cards reshuffled");
             }
@@ -35,10 +36,10 @@ namespace CardDrawBot
             else if (string.Equals(command, "autoreshuffle", StringComparison.InvariantCultureIgnoreCase))
             {
                 // Toggle the auto reshuffle of the deck.
-                Deck.AutoReshuffle = !Deck.AutoReshuffle;
+                deck.AutoReshuffle = !deck.AutoReshuffle;
                 // And notify the channel it was changed. Fire and forget.
                 socketMessage.Channel.SendEmbed("Card Handler",
-                    Deck.AutoReshuffle
+                    deck.AutoReshuffle
                         ? "The deck will now be automatically reshuffled when empty"
                         : "The deck will no longer be automatically reshuffled when empty");
             }
@@ -46,7 +47,7 @@ namespace CardDrawBot
             else if (string.Equals(command, "draw", StringComparison.InvariantCultureIgnoreCase))
             {
                 // Grab the next card.
-                var card = Deck.GetNext();
+                var card = deck.GetNext();
                 // If the card is null there are no cards left, so notify the channel about this.
                 if (card == null)
                 {
@@ -62,7 +63,7 @@ namespace CardDrawBot
                     // We set up the basic message
                     var message = $"{socketMessage.Author.Mention} drew a card. It's a {card.GetPrettyString()}.";
                     // If the deck is empty after this card, and auto reshuffle is not enabled, also append a warning about this.
-                    if (Deck.Count == 0 && !Deck.AutoReshuffle)
+                    if (deck.Count == 0 && !deck.AutoReshuffle)
                     {
                         message += " *That was the last card! **!shuffle** the deck before drawing the next card!*";
                     }
